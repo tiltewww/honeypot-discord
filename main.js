@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, ChannelType, PermissionsBitField, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, ChannelType, PermissionsBitField, REST, Routes, EmbedBuilder } = require('discord.js');
 const { token, clientId } = require('./config.js');
 const activeCollectors = new Map();
 
@@ -44,7 +44,7 @@ function setupChannelCollector(channel) {
 
             if (msg.member?.bannable) {
                 await msg.member.ban({
-                    reason: 'Honeypot violation',
+                    reason: 'Honeypot activating',
                     deleteMessageSeconds: 86400
                 });
                 console.log(`Banned ${msg.author.tag}`);
@@ -112,7 +112,21 @@ client.on('interactionCreate', async interaction => {
         });
 
         setupChannelCollector(channel);
-        await channel.send('This is a honeypot channel. Sending messages will result in a ban.');
+
+        // Отправка embed с предупреждением
+        await channel.send({
+            files: ['warn.png'], // Убедитесь, что файл warn.png доступен
+            embeds: [
+                new EmbedBuilder()
+                    .setColor(0xff0000)
+                    .setDescription(
+                        "⚠️ **ВНИМАНИЕ!** ⚠️  **Не пишите сюда!** ⚠️\nЭтот канал создан, чтобы отлавливать спам-ботов, которые могут украсть ваши данные."
+                    )
+                    .setImage("attachment://warn.png")
+                    .setFooter({ text: "Будьте внимательны и осторожны!" }),
+            ]
+        });
+
         await interaction.reply({ content: `Created honeypot channel: ${channel}`, ephemeral: true });
     } catch (error) {
         console.log('Command error:', error.message);
